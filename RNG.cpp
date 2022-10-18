@@ -2,6 +2,8 @@
 
 using namespace std;
 
+// default values are temporary
+
 /// @brief default seed used to the generation, if not specified
 int DEFAULT_SEED = 2323;
 
@@ -13,6 +15,12 @@ int DEFAULT_INCREMENT = 13;
 
 /// @brief default modulus used to the generation, if not specified
 int DEFAULT_MODULUS = 29;
+
+vector <double> RelFrequencyMap(vector <int> collection, int divisions, int lowest_value, int highest_value);
+double Mean(vector <double> collection);
+double Variance(vector <double> collection);
+double DistributionHomogenity(vector <int> collection, int divisions, int lowest_value, int highest_value);
+
 
 /// @brief simple linear congruential generator (LCG)
 class SimpleLCGGenerator{
@@ -99,3 +107,65 @@ class SimpleLCGGenerator{
         return new_number;
     }
 };
+
+/// @brief calculates the mean os the data collection
+/// @param collection data collection for analysis
+/// @return the mean of the collection (double)
+double Mean(vector <double> collection){
+    double mean = 0;
+    for(int i = 0; i < collection.size(); i++){
+        mean += collection[i]/(double)collection.size();
+    }
+    return mean;
+}
+
+/// @brief calculates the variance of a given data collection
+/// @param collection data collection for analysis
+/// @return the variance of the collection (double)
+double Variance(vector <double> collection){
+    double variance = 0;
+    double mean = Mean(collection);
+    for(int i = 0; i < collection.size(); i++){
+        double quadratic_term = (collection[i] - mean)*(collection[i] - mean);
+        variance += quadratic_term/(double)collection.size();
+    }
+    return variance;
+}
+
+/// @brief gives a factor for measure of the distribution homegenity, in a least squares method like strategy
+/// @param collection the group of points
+/// @param divisions number of divisions (bands)
+/// @param lowest_value lowest value of the collection
+/// @param highest_value highest value of the collection
+/// @return factor of homegenity, bethween 0 and 1 (close to 1 means well distributed)
+double DistributionHomogenity(vector <int> collection, int divisions, int lowest_value, int highest_value){
+    double homogenity_factor = 0;
+    vector <double> map = RelFrequencyMap(collection, divisions, lowest_value, highest_value);
+    
+    return 1 - Variance(map);
+}
+
+/// @brief generates the frequency map for the distribution
+/// @param collection the group of points
+/// @param divisions number of divisions (bands)
+/// @param lowest_value lowest value of the collection
+/// @param highest_value highest value of the collection
+/// @return vector <double> with the relative frequêncies map of the collection
+vector <double> RelFrequencyMap(vector <int> collection, int divisions, int lowest_value, int highest_value){
+    vector <double> map;
+    double step_size = (double)(highest_value - lowest_value)/(double)divisions;
+    double individual_frequency = 1.0/collection.size();
+
+    // initializes the map with n = divisions zeros
+    for(int i = 0; i < divisions; i++){
+        map.push_back(0);
+    }
+
+    // for every value of the data collection, adds one unit to the correspond band
+    for(int i = 0; i < collection.size(); i++){
+        int partition_index = (int)(collection[i]/step_size);
+        map[partition_index] += individual_frequency;
+    }
+
+    return map;
+}
